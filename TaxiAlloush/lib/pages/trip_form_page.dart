@@ -235,4 +235,3 @@ class _TripFormPageState extends State<TripFormPage> {
 }
     }
   }
-}
