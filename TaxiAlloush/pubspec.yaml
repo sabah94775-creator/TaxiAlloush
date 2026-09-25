@@ -1,0 +1,38 @@
+name: farra_app
+description: Taxi
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.6
+  cupertino_icons: ^1.0.2
+  url_launcher: 6.1.11
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"
+
+flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+  - assets/new_logo.png
+    
+
+  fonts:
+    - family: FasterOne
+      fonts:
+        - asset: assets/fonts/FasterOne-Regular.ttf
