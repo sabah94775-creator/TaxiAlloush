@@ -16,7 +16,7 @@
 
     <application
         android:usesCleartextTraffic="true"
-        android:label="فرّة"
+        android:label="تكسي علوش"
         android:icon="@mipmap/ic_launcher">
 
         <activity
