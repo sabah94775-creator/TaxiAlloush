@@ -220,21 +220,42 @@ class _TripFormPageState extends State<TripFormPage> {
     );
   }
     Future<Position?> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return null;
+    bool serviceEnabled;
+    LocationPermission permission;
 
-    LocationPermission permission = await Geolocator.checkPermission();
+    // 1. فحص هل الـ GPS شغال، وإذا طافي يفتح إعدادات الجهاز للزبون لتفعيله
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+    }
+
+    // 2. فحص الأذونات وتوجيه نافذة طلب الإذن للمستخدم فوراً
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return null;
+      if (permission == LocationPermission.denied) {
+        return null;
+      }
     }
-    if (permission == LocationPermission.deniedForever) return null;
 
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    if (permission == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+      return null;
+    }
+
+    // 3. جلب الموقع
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 8),
+      );
+    } catch (e) {
+      print('خطأ في جلب الموقع: $e');
+      return null;
+    }
   }
-
   Future<void> sendToTelegram(String message) async {
     final String phoneNumber = '9647874275685';
 
