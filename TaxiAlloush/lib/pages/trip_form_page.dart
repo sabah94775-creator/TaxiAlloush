@@ -225,10 +225,14 @@ class _TripFormPageState extends State<TripFormPage> {
       'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}',
     );
 
-    if (await canLaunchUrl(whatsappUrl)) {
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    } else {
-      print('تعذر فتح الواتساب');
+    try {
+  bool launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+  if (!launched) {
+    await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
+  }
+} catch (e) {
+  print('تعذر فتح الواتساب: $e');
+}
     }
   }
 }
