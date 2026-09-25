@@ -218,7 +218,8 @@ class _TripFormPageState extends State<TripFormPage> {
         ),
       ],
     );
-  Future<Position?> _getCurrentLocation() async {
+  }
+    Future<Position?> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return null;
 
