@@ -8,10 +8,7 @@ def flutterVersionCode = project.hasProperty('flutter.versionCode') ? project.ge
 def flutterVersionName = project.hasProperty('flutter.versionName') ? project.getProperty('flutter.versionName') : '1.0'
 
 // ✅ تعريف إعدادات التوقيع يدويًا
-def keyAlias = 'farra_key'
-def keyPassword = 'FarraApp2025!'
-def storePassword = 'FarraApp2025!'
-def storeFilePath = 'C:/Users/pc/FlutterProjects/Farra/android/release-key.jks'
+
 
 android {
     namespace "com.example.farra_app"
@@ -32,17 +29,13 @@ android {
     }
 
     signingConfigs {
-        release {
-            setKeyAlias(keyAlias)
-            setKeyPassword(keyPassword)
-            setStoreFile(file(storeFilePath))
-            setStorePassword(storePassword)
-        }
+    release {
+        signingConfig signingConfigs.debug
     }
-
+}
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
