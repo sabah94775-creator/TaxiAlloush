@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -217,21 +218,43 @@ class _TripFormPageState extends State<TripFormPage> {
         ),
       ],
     );
-  }
+  Future<Position?> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return null;
 
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return null;
+    }
+    if (permission == LocationPermission.deniedForever) return null;
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+  
   Future<void> sendToTelegram(String message) async {
     final String phoneNumber = '9647874275685';
-    final Uri whatsappUrl = Uri.parse(
-      'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}',
-    );
+
+    // جلب موقع الزبون وإضافته للرسالة
+    Position? position = await _getCurrentLocation();
+    String fullMessage = message;
+
+    if (position != null) {
+      fullMessage += "\n📍 رابط موقعي: https://maps.google.com/?q=${position.latitude},${position.longitude}";
+    }
 
     try {
-  bool launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-  if (!launched) {
-    await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
-  }
-} catch (e) {
-  print('تعذر فتح الواتساب: $e');
-}
+      final Uri whatsappUrl = Uri.parse(
+        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(fullMessage)}',
+      );
+
+      bool launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      print('تعذر فتح الواتساب: $e');
     }
   }
