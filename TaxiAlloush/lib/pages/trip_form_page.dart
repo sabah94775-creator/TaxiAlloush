@@ -233,7 +233,7 @@ class _TripFormPageState extends State<TripFormPage> {
       desiredAccuracy: LocationAccuracy.high,
     );
   }
-  
+
   Future<void> sendToTelegram(String message) async {
     final String phoneNumber = '9647874275685';
 
@@ -258,3 +258,4 @@ class _TripFormPageState extends State<TripFormPage> {
       print('تعذر فتح الواتساب: $e');
     }
   }
+}
