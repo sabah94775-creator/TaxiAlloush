@@ -26,7 +26,7 @@ class ConfirmationPage extends StatelessWidget {
                 child: Image.asset('assets/new_logo.png'),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
 
               // ✅ كلمة Farra بتنسيق أنيق
               Text(
@@ -40,7 +40,7 @@ class ConfirmationPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 15),
 
               const Icon(Icons.check_circle, color: Colors.green, size: 80),
               const SizedBox(height: 20),
@@ -51,7 +51,7 @@ class ConfirmationPage extends StatelessWidget {
                 style: TextStyle(fontSize: 20),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
               ElevatedButton(
                 onPressed: () {
