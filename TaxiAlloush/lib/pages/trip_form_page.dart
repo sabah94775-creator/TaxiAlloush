@@ -220,64 +220,86 @@ class _TripFormPageState extends State<TripFormPage> {
     );
   }
     Future<Position?> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  bool serviceEnabled;
+  LocationPermission permission;
 
-    // 1. فحص هل الـ GPS شغال، وإذا طافي يفتح إعدادات الجهاز للزبون لتفعيله
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
+  // 1. فحص هل الـ GPS شغّال؟
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    // فتح إعدادات الموقع للزبون
+    await Geolocator.openLocationSettings();
+    
+    // إعطاء مهلة وانتظار الزبون يشغل الـ GPS (حلقة فحص حتى 10 ثوانٍ)
+    int checks = 0;
+    while (!serviceEnabled && checks < 10) {
+      await Future.delayed(const Duration(seconds: 1));
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return null;
+      checks++;
     }
 
-    // 2. فحص الأذونات وتوجيه نافذة طلب الإذن للمستخدم فوراً
-    permission = await Geolocator.checkPermission();
+    if (!serviceEnabled) {
+      return null; // إذا لم يقم بتشغيله بعد الانتظار
+    }
+  }
+
+  // 2. فحص وإعادة طلب أذونات الموقع
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return null;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      await Geolocator.openAppSettings();
-      return null;
-    }
-
-    // 3. جلب الموقع
-    try {
-      return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 8),
-      );
-    } catch (e) {
-      print('خطأ في جلب الموقع: $e');
       return null;
     }
   }
-  Future<void> sendToTelegram(String message) async {
-    final String phoneNumber = '9647874275685';
 
-    // جلب موقع الزبون وإضافته للرسالة
-    Position? position = await _getCurrentLocation();
-    String fullMessage = message;
+  if (permission == LocationPermission.deniedForever) {
+    await Geolocator.openAppSettings();
+    return null;
+  }
 
-    if (position != null) {
-      fullMessage += "\n📍 رابط موقعي: https://maps.google.com/?q=${position.latitude},${position.longitude}";
-    }
-
-    try {
-      final Uri whatsappUrl = Uri.parse(
-        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(fullMessage)}',
-      );
-
-      bool launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-      if (!launched) {
-        await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
-      }
-    } catch (e) {
-      print('تعذر فتح الواتساب: $e');
-    }
+  // 3. جلب الموقع بـ High Accuracy وإعطاء مهلة مناسبة للالتقاط
+  try {
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 12),
+    );
+  } catch (e) {
+    print('خطأ في جلب الموقع: $e');
+    return null;
   }
 }
+ Future<void> sendToTelegram(String message) async {
+  final String phoneNumber = '9647874275685';
+
+  // 1. جلب الموقع أولاً
+  Position? position = await _getCurrentLocation();
+
+  // 2. شرط صارم: إذا كان الموقع فارغ (null) يتوقف الإرسال فوراً!
+  if (position == null) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('عذراً، يجب تفعيل الموقع الجغرافي لتتمكن من إرسال الطلب!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    return; // إيقاف الدالة وعدم فتح الواتساب نهائياً
+  }
+
+  // 3. إذا وجد الموقع، يتم إضافته للرسالة وفتح الواتساب
+  String fullMessage = message;
+  fullMessage += "\n📍 رابط موقعي: https://maps.google.com/?q=${position.latitude},${position.longitude}";
+
+  try {
+    final Uri whatsappUrl = Uri.parse(
+      'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(fullMessage)}',
+    );
+
+    bool launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
+    }
+  } catch (e) {
+    print('تعذر فتح الواتساب: $e');
+  }
+} 
