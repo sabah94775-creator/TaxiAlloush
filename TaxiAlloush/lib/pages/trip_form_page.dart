@@ -301,5 +301,6 @@ class _TripFormPageState extends State<TripFormPage> {
     }
   } catch (e) {
     print('تعذر فتح الواتساب: $e');
-  }
+ }
 } 
+}  
